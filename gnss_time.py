@@ -11,7 +11,7 @@ def gps_utc(week, tow, leap_seconds):
     total_days = week_total * 7
     total_microseconds  = tow * 1000
 
-    return gps_start + timedelta(days=total_days, seconds=leap_seconds, microseconds=total_microseconds)
+    return gps_start + timedelta(days=total_days, seconds=-1*leap_seconds, microseconds=total_microseconds)
 
 # return UTC
 # tow - milliseconds
@@ -33,7 +33,7 @@ def gal_utc(week, tow, leap_seconds):
     total_days = week_total * 7
     total_microseconds  = tow * 1000
 
-    return gal_start + timedelta(days=total_days, seconds=leap_seconds, microseconds=total_microseconds)
+    return gal_start + timedelta(days=total_days, seconds=-1*leap_seconds, microseconds=total_microseconds)
 
 # return UTC
 # tow - milliseconds
@@ -47,7 +47,7 @@ def bds_utc(week, tow, leap_seconds):
     total_microseconds  = tow * 1000
 
     # BDS is 14 seconds behind GPS
-    delta_seconds = leap_seconds + 14
+    delta_seconds = -1*leap_seconds + 14
 
     return bds_start + timedelta(days=total_days, seconds=delta_seconds, microseconds=total_microseconds)
 
@@ -55,7 +55,7 @@ def bds_utc(week, tow, leap_seconds):
 if __name__ == "__main__":
 
     # results should be Apr 22, 2022, 19:46:32 UTC
-    leap_seconds = -18
+    leap_seconds = 18
 
     gps_week = 158
     gps_tow = 503210000
