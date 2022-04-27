@@ -1,5 +1,8 @@
-import rtcm1019, rtcm1020, rtcm1046, rtcm1042
-from rtcmmsm import MSMMsg
+import rtcm_decode.rtcm1019 as rtcm1019
+import rtcm_decode.rtcm1020 as rtcm1020
+import rtcm_decode.rtcm1046 as rtcm1046
+import rtcm_decode.rtcm1042 as rtcm1042
+from rtcm_decode.rtcmmsm import MSMMsg
 
 msm5_ids = [1075, 1085, 1095, 1105, 1115, 1125]
 msm4_ids = [1074, 1084, 1094, 1104, 1114, 1124]
