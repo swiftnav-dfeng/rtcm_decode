@@ -1,5 +1,5 @@
 
-from next_bits import next_bits
+from rtcm_decode.next_bits import next_bits
 
 class MSMMsg():
     def __init__(self, msg_type, data):
