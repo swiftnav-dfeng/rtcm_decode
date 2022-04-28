@@ -120,7 +120,7 @@ class MSMMsg():
             if str(self.msg_type)[3] == '4':
                 # MSM4
                 sat_info_list.append(MSM4Sat(self.data))
-            elif str(self.msg_type)[3] == '5':
+            elif str(self.msg_type)[3] == '5' or str(self.msg_type)[3] == '7':
                 # MSM5
                 sat_info_list.append(MSM5Sat(self.data))
 
@@ -138,6 +138,11 @@ class MSMMsg():
                     elif str(self.msg_type)[3] == '5':
                         # MSM5
                         signal = MSM5Signal(self.data)
+                        extended_info = sat_info_list[nsat].extended_info
+                        doppler = signal.phase_range_rate
+                    elif str(self.msg_type)[3] == '7':
+                        # MSM5
+                        signal = MSM7Signal(self.data)
                         extended_info = sat_info_list[nsat].extended_info
                         doppler = signal.phase_range_rate
 
@@ -227,6 +232,28 @@ class MSM5Signal():
         self.phase_locktime = next_bits(self.data,4)
         self.half_cycle_amb = next_bits(self.data,1)
         self.cn0 = next_bits(self.data,6)
+        self.phase_range_rate = next_bits(self.data,15)
+    pass
+
+class MSM7Signal():
+    def __init__(self, data):
+        self.data = data
+        
+        self.pseudorange_fine = None
+        self.phase_fine = None
+        self.phase_locktime = None
+        self.half_cycle_amb = None
+        self.cn0 = None
+        self.phase_range_rate = None
+        
+        self.parse_msg()
+
+    def parse_msg(self):
+        self.pseudorange_fine = next_bits(self.data,20)
+        self.phase_fine = next_bits(self.data,24)
+        self.phase_locktime = next_bits(self.data,10)
+        self.half_cycle_amb = next_bits(self.data,1)
+        self.cn0 = next_bits(self.data,10)
         self.phase_range_rate = next_bits(self.data,15)
     pass
 
