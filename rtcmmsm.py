@@ -133,25 +133,19 @@ class MSMMsg():
                     if str(self.msg_type)[3] == '4':
                         # MSM4
                         signal = MSM4Signal(self.data)
-                        pseudorange = sat_info_list[nsat].rough_int_millisec + sat_info_list[nsat].rough_mod_millisec * 2.0**-10 + signal.pseudorange_fine * 2.0**-24
-                        extended_info = sat_info_list[nsat].extended_info
-                        phaserange = signal.phase_fine * 2.0**-29
-                        lock_time = signal.phase_locktime
-                        half_cycle_amb = signal.half_cycle_amb
-                        cn0 = signal.cn0
+                        extended_info = None
                         doppler = None
-
                     elif str(self.msg_type)[3] == '5':
                         # MSM5
                         signal = MSM5Signal(self.data)
-                        pseudorange = sat_info_list[nsat].rough_int_millisec + sat_info_list[nsat].rough_mod_millisec * 2.0**-10 + signal.pseudorange_fine * 2.0**-24
                         extended_info = sat_info_list[nsat].extended_info
-                        phaserange = signal.phase_fine * 2.0**-29
-                        lock_time = signal.phase_locktime
-                        half_cycle_amb = signal.half_cycle_amb
-                        cn0 = signal.cn0
                         doppler = signal.phase_range_rate
-                    
+
+                    pseudorange = sat_info_list[nsat].rough_int_millisec + sat_info_list[nsat].rough_mod_millisec * 2.0**-10 + signal.pseudorange_fine * 2.0**-24
+                    phaserange = signal.phase_fine * 2.0**-29
+                    lock_time = signal.phase_locktime
+                    half_cycle_amb = signal.half_cycle_amb
+                    cn0 = signal.cn0
                     self.observations.append(Observation(self.sat_list[nsat], self.signal_list[nsig], pseudorange, extended_info, phaserange, lock_time, half_cycle_amb, cn0, doppler))
         
     # def next_bits(self, bits):
