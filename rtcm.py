@@ -57,6 +57,7 @@ class RTCMDecode():
 
         for i in remainder:
             if i != 0:
+                print("CRC ERROR")
                 return False
         
         return True
