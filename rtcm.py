@@ -4,6 +4,7 @@ import rtcm_decode.rtcm1046 as rtcm1046
 import rtcm_decode.rtcm1042 as rtcm1042
 from rtcm_decode.rtcmmsm import MSMMsg
 
+msm7_ids = [1077, 1087, 1097, 1107, 1117, 1127]
 msm5_ids = [1075, 1085, 1095, 1105, 1115, 1125]
 msm4_ids = [1074, 1084, 1094, 1104, 1114, 1124]
 
@@ -105,7 +106,7 @@ class RTCMDecode():
                 
                 # parse only msm5 obs messages below
                 parsed_msg = None
-                if self.msg_type in msm5_ids + msm4_ids:
+                if self.msg_type in msm5_ids + msm4_ids + msm7_ids:
                     parsed_msg = MSMMsg(self.msg_type, data_bit_array)
                 elif self.msg_type == 1019:
                     parsed_msg = rtcm1019.RTCM1019(self.msg_type, data_bit_array)
