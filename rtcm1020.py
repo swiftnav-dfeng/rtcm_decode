@@ -43,7 +43,7 @@ class RTCM1020():
         self.reserved1 = None
 
         
-        self.parse_msg()
+        #self.parse_msg()
 
     def parse_msg(self):
 

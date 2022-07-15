@@ -36,7 +36,7 @@ class RTCM1019():
         self.l2p_flag = None
         self.fit_int = None
         
-        self.parse_msg()
+        #self.parse_msg()
 
     def parse_msg(self):
 

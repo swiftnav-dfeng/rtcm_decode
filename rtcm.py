@@ -58,7 +58,7 @@ class RTCMDecode():
 
         for i in remainder:
             if i != 0:
-                print("CRC ERROR")
+                #raise Exception("CRC ERROR")
                 return False
         
         return True
@@ -92,7 +92,7 @@ class RTCMDecode():
                     self.crc_pass = True
                 else:
                     self.crc_pass = False
-                    continue
+                    #continue
 
                 #rtcm_msg = RTCMMsg(create_bitarray(data2))
 
@@ -102,20 +102,35 @@ class RTCMDecode():
                 # 12bits - msg_type    
                 self.msg_type = 0
                 for b in range(12):
-                    self.msg_type = (self.msg_type << 1) + data_bit_array.pop(0)
+                    try:
+                        self.msg_type = (self.msg_type << 1) + data_bit_array.pop(0)
+                    except IndexError as e:
+                        print(e)
+                        self.msg_type = 666
                 
                 # parse only msm5 obs messages below
                 parsed_msg = None
                 if self.msg_type in msm5_ids + msm4_ids + msm7_ids:
                     parsed_msg = MSMMsg(self.msg_type, data_bit_array)
+                    if self.crc_pass is True:
+                        parsed_msg.parse_msg()
+                        parsed_msg.parse_signal_data()
                 elif self.msg_type == 1019:
                     parsed_msg = rtcm1019.RTCM1019(self.msg_type, data_bit_array)
+                    if self.crc_pass is True:
+                        parsed_msg.parse_msg()
                 elif self.msg_type == 1020:
                     parsed_msg = rtcm1020.RTCM1020(self.msg_type, data_bit_array)
+                    if self.crc_pass is True:
+                        parsed_msg.parse_msg()
                 elif self.msg_type == 1046:
                     parsed_msg = rtcm1046.RTCM1046(self.msg_type, data_bit_array)
+                    if self.crc_pass is True:
+                        parsed_msg.parse_msg()
                 elif self.msg_type == 1042:
                     parsed_msg = rtcm1042.RTCM1042(self.msg_type, data_bit_array)
+                    if self.crc_pass is True:
+                        parsed_msg.parse_msg()
 
                 self.msg_found_callback(RTCMMsg(self.msg_type, self.crc_pass, parsed_msg))
                 

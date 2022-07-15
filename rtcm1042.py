@@ -35,7 +35,7 @@ class RTCM1042():
         self.health = None
 
         
-        self.parse_msg()
+        #self.parse_msg()
 
     def next_bits(self, bits):
         word = 0

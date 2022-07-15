@@ -38,7 +38,7 @@ class RTCM1046():
         self.e1b_data_valid = None
         self.reserved1 = None
         
-        self.parse_msg()
+        #self.parse_msg()
 
     def next_bits(self, bits):
         word = 0

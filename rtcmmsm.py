@@ -27,8 +27,8 @@ class MSMMsg():
         self.cell_mask = None
         self.observations = []
 
-        self.parse_msg()
-        self.parse_signal_data()
+        #self.parse_msg()
+        #self.parse_signal_data()
 
     def parse_msg(self):
         #print(f'msg type is {self.msg_type}')
