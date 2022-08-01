@@ -1,6 +1,6 @@
 from handler import Handler
 from crc import Configuration
-from rtcm import RTCM1005, RTCMMsg
+from rtcm import CRCQ24, RTCM1005, RTCMMsg, rtcm_lookup
 
 crc_configuration = Configuration(width=24, polynomial=0x1864CFB)
 
@@ -35,21 +35,18 @@ sample_msg = bytearray([
     0x98
 ])
 
-def process_frame(frame, crc_pass):
-    msg = RTCMMsg(frame)
-    print(f'{msg.msg_type} {crc_pass}')
+def process_frame(msg: RTCMMsg):
+    print(msg)
 
 def main():
-    # with open('data/bd990_30s.rtcm', 'rb') as f:
-    #     h = Handler(f, process_frame)
-    #     h.process()
+    with open('/Users/dfeng/dev/rtcm_decode/data/d1_30s.rtcm', 'rb') as f:
+        h = Handler(f, process_frame)
+        h.process()
 
-    # crc check
-    crc = (sample_msg[-3] << 16) + (sample_msg[-2] << 8) + sample_msg[-1]
-    print(Handler.check_frame(crc_configuration, crc, sample_msg[:-3]))
-
-    r = RTCM1005(sample_msg)
-    for field in r.obj_data:
+    crcq24 = CRCQ24()
+    r = RTCMMsg(sample_msg, crcq24)
+    print(r.checksum_passed())
+    for field in r.body_obj.body_data:
         print(f'{field.name} {field.value} {field.unit}')
 
 if __name__ == "__main__":

@@ -9,9 +9,18 @@ class DataField:
     def __init__(self, bits: bitarray):
         pass
 
-class GNSSEpochTime():
+class GNSSEpochTime(DataField):
     length = 30
     name = "GNSS Epoch Time"
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class ExtendedSatInfo(DataField):
+    length = 4
+    name = "Extended Satellite Info"
     def __init__(self, bits: bitarray):
         super().__init__(bits)
 
@@ -43,6 +52,17 @@ class DF002(DataField):
 class DF003(DataField):
     length = 12
     name = "Reference Station ID"
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF004(GNSSEpochTime):
+    length = 30
+    name = "GPS Epoch Time"
+    unit = 'milliseconds'
 
     def __init__(self, bits: bitarray):
         super().__init__(bits)
@@ -131,6 +151,17 @@ class DF027(DataField):
         df = RTCMInt(self.length, bits)
         self.value = df.value * 0.0001
 
+class DF034(GNSSEpochTime):
+    length = 27
+    name = "GLONASS Epoch Time"
+    unit = 'milliseconds'
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
 # Reference Station Indicator
 class DF141(DataField):
     length = 1
@@ -149,6 +180,17 @@ class DF142(DataField):
         super().__init__(bits)
 
         df = RTCMBit(self.length, bits)
+        self.value = df.value
+
+class DF248(GNSSEpochTime):
+    length = 30
+    name = "Galileo Epoch Time"
+    unit = 'milliseconds'
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
         self.value = df.value
 
 # Quarter Cycle Indicator
@@ -182,7 +224,7 @@ class DF394(DataField):
         
         df = RTCMBit(self.length, bits)
         self.value = df.value
-        self.nsat = self.value.count(value=1)
+        self.nsat = self.value.count(1)
 
 class DF395(DataField):
     length = 32
@@ -193,17 +235,135 @@ class DF395(DataField):
         
         df = RTCMBit(self.length, bits)
         self.value = df.value
-        self.nsig = self.value.count(value=1)
+        self.nsig = self.value.count(1)
 
 class DF396(DataField):
     name = "Cell Mask"
 
-    def __init__(self, bits: bitarray, length:int):
+    def __init__(self, bits: bitarray):
         super().__init__(bits)
         
         # length will be nsat * nsig
-        self.length = length
+        self.length = len(bits)
         df = RTCMBit(self.length, bits)
+        self.value = df.value
+
+class DF397(DataField):
+    length = 8
+    name = "Rough range high"
+    unit = 'milliseconds'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF398(DataField):
+    length = 10
+    name = "Rough range low"
+    unit = '2^-10 ms'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF399(DataField):
+    length = 14
+    name = "Phaserange rate"
+    unit = 'milliseconds'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMInt(self.length, bits)
+        self.value = df.value
+
+class DF400(DataField):
+    length = 15
+    name = "Fine pseudorange"
+    unit = '2^-24 ms'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMInt(self.length, bits)
+        self.value = df.value
+
+class DF401(DataField):
+    length = 22
+    name = "Fine Phaserange"
+    unit = '2^-29 ms'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMInt(self.length, bits)
+        self.value = df.value
+
+class DF402(DataField):
+    length = 4
+    name = "Lock Time Indicator"
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF403(DataField):
+    length = 6
+    name = "GNSS signal CNR"
+    unit = "1 dB-Hz"
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF404(DataField):
+    length = 15
+    name = "Fine Phaserange"
+    unit = '0.0001 ms'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMInt(self.length, bits)
+        self.value = df.value
+
+class DF405(DataField):
+    length = 20
+    name = "Fine Pseudorange extended"
+    unit = '2^-29 ms'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMInt(self.length, bits)
+        self.value = df.value
+
+class DF406(DataField):
+    length = 24
+    name = "Fine Phaserange extended"
+    unit = '2^-31 ms'
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMInt(self.length, bits)
+        self.value = df.value
+
+class DF407(DataField):
+    length = 10
+    name = "Lock Time Indicator extended"
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF408(DataField):
+    length = 10
+    name = "CNR extended"
+    unit = "2^-4 dB-Hz"
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
         self.value = df.value
 
 class DF409(DataField):
@@ -233,6 +393,16 @@ class DF412(DataField):
         df = RTCMUint(self.length, bits)
         self.value = df.value
 
+class DF416(DataField):
+    length = 3
+    name = "GLONASS Day of Week"
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+        
 class DF417(DataField):
     length = 1
     name = "GNSS Divergence-free Smoothing Indicator"
@@ -253,3 +423,34 @@ class DF418(DataField):
         df = RTCMBit(self.length, bits)
         self.value = df.value
 
+class DF420(DataField):
+    length = 1
+    name = "Half-cycle ambiguity indicator"
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+        
+        df = RTCMBit(self.length, bits)
+        self.value = df.value
+
+class DF427(GNSSEpochTime):
+    length = 30
+    name = "BeiDou Epoch Time"
+    unit = 'milliseconds'
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value
+
+class DF428(GNSSEpochTime):
+    length = 30
+    name = "QZSS Epoch Time"
+    unit = 'milliseconds'
+
+    def __init__(self, bits: bitarray):
+        super().__init__(bits)
+
+        df = RTCMUint(self.length, bits)
+        self.value = df.value

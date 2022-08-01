@@ -1,6 +1,8 @@
 from crc import CrcCalculator, Configuration
 import logging
 
+from rtcm import RTCMMsg, CRCQ24
+
 class Handler():
     def __init__(self, handle, callback):
         self.handle = handle
@@ -9,7 +11,7 @@ class Handler():
         self.frame_length = None
         self.header = None
 
-        self.crc_configuration = Configuration(width=24, polynomial=0x1864CFB)
+        self.crcq24 = CRCQ24()
 
         self.callback = callback
 
@@ -54,15 +56,15 @@ class Handler():
                     # frame_length does not include header (3 bytes) and crc (3 bytes)
                     self.frame.append(b)
 
-                    crc = (self.frame[-3] << 16) + (self.frame[-2] << 8) + self.frame[-1]
-                    if Handler.check_frame(self.crc_configuration, crc, self.frame[:-3]):
-                        self.callback(self.frame, True)
-                    else:
-                        # logging.warn(f"CRC check failed on frame {self.frame}")
+                    # frame complete
+                    print(f'frame length {self.frame_length}')
+                    msg = RTCMMsg(self.frame, self.crcq24)
+                    if msg.checksum_passed() is False:
+                        logging.warn(f"CRC check failed on frame {self.frame}")
                         # crc failed, reset frame
                         # reinsert all bytes, except the preamble back into data
-                        self.callback(self.frame, False)
-                        self.data = self.frame[1:] + self.data      
+                        self.data = self.frame[1:] + self.data
+                    self.callback(msg)      
                     self.reset_frame()
                 else:
                     # in middle of SBF message, read more
