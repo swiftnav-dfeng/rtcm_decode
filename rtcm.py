@@ -1,143 +1,90 @@
-import rtcm_decode.rtcm1019 as rtcm1019
-import rtcm_decode.rtcm1020 as rtcm1020
-import rtcm_decode.rtcm1046 as rtcm1046
-import rtcm_decode.rtcm1042 as rtcm1042
-from rtcm_decode.rtcmmsm import MSMMsg
+from bitarray import bitarray
+from bitarray.util import ba2int
+from data_fields import *
+from crc import CrcCalculator, Configuration
 
-msm7_ids = [1077, 1087, 1097, 1107, 1117, 1127]
-msm5_ids = [1075, 1085, 1095, 1105, 1115, 1125]
-msm4_ids = [1074, 1084, 1094, 1104, 1114, 1124]
 
-# data is byte array
-def create_bitarray(data):
-    bit_array = []
-    for b in data:
-        bit_array.append(b >> 7)
-        bit_array.append((b & 0b01000000)>> 6)
-        bit_array.append((b & 0b00100000)>> 5)
-        bit_array.append((b & 0b00010000)>> 4)
-        bit_array.append((b & 0b00001000)>> 3)
-        bit_array.append((b & 0b00000100)>> 2)
-        bit_array.append((b & 0b00000010)>> 1)
-        bit_array.append(b & 0b00000001)
-    return bit_array
+class RTCMMsg:
+    dfs = []
 
-class RTCMDecode():
-    def __init__(self, handle, callback):
-        self.handle = handle
-        self.key = self.create_crc_key('1100001100100110011111011')
-        self.crc_pass = None
-        self.msg_length = None
-        self.msg_type = None
-        self.msg_array = []
-        self.msg_found_callback = callback
-        self.parse_data()
+    def __init__(self, msg:bytearray):
+        self.msg = msg
+        self._ba = bitarray(buffer = msg, endian='big')
+        self.length = self.get_length()
+        self.msg_type = self.get_msg_type()
+        self.crc = self.get_crc()
+
+        self.current_bit = 0
+
+        self.obj_data = []
+        self._get_obj_data()
+
+    def get_length(self):
+        return ba2int(self._ba[14:24])
+
+    def get_msg_type(self):
+        return ba2int(self._ba[24:36])
+
+    def get_crc(self):
+        return ba2int(self._ba[-24:])
+
+    def get_n_bits(self, n):
+        val = self._ba[self.current_bit:self.current_bit+n]
+        self.current_bit += n
+        return val
+    
+    def _get_obj_data(self):
+        for df in self.dfs:
+            self.obj_data.append(df(self.get_n_bits(df.length)))
+            
+
+    
+class RTCMMsm5(RTCMMsg):
+    dfs = [
+        DF003,
+        GNSSEpochTime,
+        DF393,
+        DF409,
+        DF001,
+        DF411,
+        DF412,
+        DF417,
+        DF418,
+        DF394,
+        DF395
+        # cell mask last (DF396)
+    ]
+
+    def __init__(self, msg):
+        super().__init__(msg)
+    
+        self.current_bit = 36
+
+        self._get_obj_data()
+
+        cellmask_length = self.obj_data[-2].nsat * self.obj_data[-1].nsig
+        self.obj_data.append(DF396(self.get_n_bits(cellmask_length)))
+
+class RTCM1005(RTCMMsg):
+
+    dfs = [DF003, DF021, DF022, DF023, DF024, DF141, DF025, DF142, DF001, DF026, DF364, DF027]
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+        self.current_bit = 36
+
+        self._get_obj_data()
+
         
-    def create_crc_key(self, poly):
-        # CRC qualcomm 24
-        #key = 0b100101011101110001000001
-        key_array = []
 
-        for bit in poly:
-            if bit == '1':
-                key_array.append(1)
-            else:
-                key_array.append(0)
-
-        return key_array
-
-    def check_crc(self, data, key):
-        remainder = data.copy()
-        for j in range(len(data) - (len(key)-1)):
-            if remainder.pop(0) == 1:
-                for i in range(len(key)-1):
-                    if key[i+1] != remainder[i]:
-                        remainder[i] = 1
-                    else:
-                        remainder[i] = 0
-
-        for i in remainder:
-            if i != 0:
-                print("CRC ERROR")
-                return False
-        
-        return True
-
-
-    def parse_data(self):
-        while True:
-            data = self.handle.read(1)
-
-            if data == b'\xd3':  #preamble
-
-                # obtain msg length
-                data1 = self.handle.read(2)
-                data1_int = int.from_bytes(data1, byteorder='big') # first 6 == zero, last ten bits = length of message
-                if data1_int >> 10 != 0:
-                    #invalid msg format
-                    continue
-                self.msg_length = data1_int & 0b11111111111
-                
-                data2 = self.handle.read(self.msg_length)
-                if len(data2) < self.msg_length:
-                    print("not enough bytes read")
-                    break
-
-                data_bit_array = create_bitarray(data2)
-                
-                crc = create_bitarray(self.handle.read(3))
-
-                full_msg_bitarray = create_bitarray(data+data1)+data_bit_array+crc
-                if self.check_crc(full_msg_bitarray, self.key):
-                    self.crc_pass = True
-                else:
-                    self.crc_pass = False
-                    continue
-
-                #rtcm_msg = RTCMMsg(create_bitarray(data2))
-
-                #data_bit_array = create_bitarray(data2)
-                
-
-                # 12bits - msg_type    
-                self.msg_type = 0
-                for b in range(12):
-                    self.msg_type = (self.msg_type << 1) + data_bit_array.pop(0)
-                
-                # parse only msm5 obs messages below
-                parsed_msg = None
-                if self.msg_type in msm5_ids + msm4_ids + msm7_ids:
-                    parsed_msg = MSMMsg(self.msg_type, data_bit_array)
-                elif self.msg_type == 1019:
-                    parsed_msg = rtcm1019.RTCM1019(self.msg_type, data_bit_array)
-                elif self.msg_type == 1020:
-                    parsed_msg = rtcm1020.RTCM1020(self.msg_type, data_bit_array)
-                elif self.msg_type == 1046:
-                    parsed_msg = rtcm1046.RTCM1046(self.msg_type, data_bit_array)
-                elif self.msg_type == 1042:
-                    parsed_msg = rtcm1042.RTCM1042(self.msg_type, data_bit_array)
-
-                self.msg_found_callback(RTCMMsg(self.msg_type, self.crc_pass, parsed_msg))
-                
-            elif data == b'':
-                print("eof")
-                break
-
-
-class RTCMMsg():
-    def __init__(self, msg_type, crc_pass, parsed):
-        self.msg_type = msg_type
-        self.crc_pass = crc_pass
-        self.parsed = parsed
-
-
-
-
-
-if __name__ == "__main__":
-    with open('data/bd990_30s.rtcm', 'rb') as f:
-        decoder = RTCMDecode(f)
-
-    for msg in decoder.msg_array:
-        print(msg.parsed.msg_type)
+rtcm_lookup = {
+    1005: RTCM1005,
+    1075: RTCMMsm5,
+    1085: RTCMMsm5,
+    1095: RTCMMsm5,
+    1105: RTCMMsm5,
+    1115: RTCMMsm5,
+    1125: RTCMMsm5
+}
     
