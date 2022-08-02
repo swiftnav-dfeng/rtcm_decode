@@ -5,3 +5,5 @@ test.py
 .vscode
 .DS_Store
 build
+dist
+rtcm_decode.egg-info
