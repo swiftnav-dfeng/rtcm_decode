@@ -232,7 +232,8 @@ class DF394(DataField):
         for b in ba:
             if b == 1:
                 sat_list.append(sat)
-            sat += 1   
+            sat += 1
+        return sat_list   
 
 class DF395(DataField):
     length = 32
@@ -242,8 +243,17 @@ class DF395(DataField):
         super().__init__(bits)
         
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = self.get_sig_list(df.value)
         self.nsig = self.value.count(1)
+
+    def get_sig_list(self, ba: bitarray):
+        sig_list = []
+        sig = 1
+        for b in ba:
+            if b == 1:
+                sig_list.append(sig)
+            sig += 1
+        return sig_list
 
 class DF396(DataField):
     name = "Cell Mask"
