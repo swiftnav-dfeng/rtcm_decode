@@ -1,6 +1,6 @@
 from bitarray import bitarray
 from bitarray.util import ba2int
-from data_fields import *
+from rtcm_decode.data_fields import *
 from crc import CrcCalculator, Configuration
 import logging
 
@@ -29,8 +29,6 @@ class RTCMMsg:
         self.length = self._get_n_bits(10)
         self.msg_type = ba2int(self._get_n_bits(12))
 
-        print(f'msg bytes {self.length} ba bits {len(self._ba)}')
-
         self.body_obj = None
 
         self.crc = self.get_crc()
@@ -41,13 +39,9 @@ class RTCMMsg:
 
         self.checksum = crcq24.calculate_checksum(msg[:-3])
         if self.checksum_passed():
-            
-            
-
-            if self.checksum_passed:
-                body_cls = rtcm_lookup.get(self.msg_type, None)
-                if body_cls is not None:
-                    self.body_obj = body_cls(self._ba[self.current_bit:])
+            body_cls = rtcm_lookup.get(self.msg_type, None)
+            if body_cls is not None:
+                self.body_obj = body_cls(self._ba[self.current_bit:])
         else:
             logging.warn(f'checksum failed header crc = {self.crc}, calculated = {self.checksum}')
 
@@ -103,8 +97,6 @@ class RTCMMsm5(RTCMBody):
         
         self.nsat = self.body_data[-2].nsat
         self.nsig = self.body_data[-1].nsig
-
-        print(f'nsat {self.nsat} nsig {self.nsig}, len ba {len(self._ba)}')
 
         cellmask_length = self.nsat * self.nsig
 

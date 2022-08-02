@@ -3,3 +3,8 @@ __pycache__
 venv
 test.py
 .vscode
+dist/rtcm_decode-0.0-py3.9.egg
+rtcm_decode.egg-info/dependency_links.txt
+rtcm_decode.egg-info/PKG-INFO
+rtcm_decode.egg-info/SOURCES.txt
+rtcm_decode.egg-info/top_level.txt

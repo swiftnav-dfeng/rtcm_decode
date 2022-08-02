@@ -1,5 +1,5 @@
 from bitarray import bitarray
-from data_types import *
+from rtcm_decode.data_types import *
 
 
 class DataField:
