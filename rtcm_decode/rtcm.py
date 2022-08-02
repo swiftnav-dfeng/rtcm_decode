@@ -72,8 +72,8 @@ class RTCMBody:
     def _get_body_data(self):
         for df in self.dfs:
             self.body_data.append(df(self._get_n_bits(df.length)))
-    
-class RTCMMsm5(RTCMBody):
+
+class RTCMMsm(RTCMBody):
     # header
     dfs = [
         DF003,
@@ -110,6 +110,10 @@ class RTCMMsm5(RTCMBody):
 
         self.body_data.append(DF396(self._get_n_bits(cellmask_length)))
 
+class RTCMMsm5(RTCMMsm):
+    def __init__(self, body: bitarray) -> None:
+        super().__init__(body)
+        
         self.sat_data.append(SatDataMSM5(self._ba, self.nsat, self.current_bit))
         self.current_bit = self.sat_data[-1].current_bit
 
