@@ -12,6 +12,7 @@ class DataField:
 class GNSSEpochTime(DataField):
     length = 30
     name = "GNSS Epoch Time"
+
     def __init__(self, bits: bitarray):
         super().__init__(bits)
 
@@ -30,10 +31,13 @@ class ExtendedSatInfo(DataField):
 # Reserved
 class DF001(DataField):
     name = "Reserved"
-    length = 7
+
     def __init__(self, bits: bitarray):
         super().__init__(bits)
-
+        if 'length' in kwargs:
+            self.length = kwargs['length']
+        else:
+            self.length = 1
         df = RTCMBit(self.length, bits)
         self.value = df.value
 
@@ -227,11 +231,11 @@ class DF394(DataField):
     
     def get_sat_list(self, ba: bitarray):
         sat_list = []
-        sat = 64
+        sat = 1
         for b in ba:
             if b == 1:
                 sat_list.append(sat)
-            sat -= 1
+            sat += 1
         return sat_list   
 
 class DF395(DataField):
@@ -248,11 +252,11 @@ class DF395(DataField):
     def get_sig_list(self, ba: bitarray):
         print(f'sig list {ba}')
         sig_list = []
-        sig = 32
+        sig = 1
         for b in ba:
             if b == 1:
                 sig_list.append(sig)
-            sig -= 1
+            sig += 1
         return sig_list
 
 class DF396(DataField):
