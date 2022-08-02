@@ -36,10 +36,10 @@ sample_msg = bytearray([
 ])
 
 def process_frame(msg: RTCMMsg):
-    print(msg)
+    print(msg.msg_type)
 
 def main():
-    with open('/Users/dfeng/dev/rtcm_decode/data/d1_30s.rtcm', 'rb') as f:
+    with open('data/d1_30s.rtcm', 'rb') as f:
         h = Handler(f, process_frame)
         h.process()
 

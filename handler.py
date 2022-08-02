@@ -46,7 +46,7 @@ class Handler():
                 elif len(self.frame) == 2:
                     # third byte of "header"
                     self.frame.append(b)
-                    self.frame_length = (self.frame[2]) + (self.frame[1] & 0xc0 << 2)
+                    self.frame_length = (self.frame[2]) + ((self.frame[1] & 0x03) << 8)
                     if self.frame_length > 1023:
                         # valid lengths are 0-1023, reset frame
                         logging.warn(f"invalid frame length {self.frame_length}, frame {self.frame}")
