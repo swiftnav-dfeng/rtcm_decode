@@ -244,7 +244,7 @@ class DF395(DataField):
         
         df = RTCMBit(self.length, bits)
         self.value = self.get_sig_list(df.value)
-        self.nsig = self.value.count(1)
+        self.nsig = df.value.count(1)
 
     def get_sig_list(self, ba: bitarray):
         sig_list = []
