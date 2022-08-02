@@ -1,6 +1,6 @@
-from handler import Handler
+from rtcm_decode.handler import Handler
 from crc import Configuration
-from rtcm import CRCQ24, RTCM1005, RTCMMsg, rtcm_lookup
+from rtcm_decode.rtcm import CRCQ24, RTCM1005, RTCMMsg, rtcm_lookup
 
 crc_configuration = Configuration(width=24, polynomial=0x1864CFB)
 
