@@ -223,8 +223,16 @@ class DF394(DataField):
         super().__init__(bits)
         
         df = RTCMBit(self.length, bits)
-        self.value = df.value
-        self.nsat = self.value.count(1)
+        self.value = self.get_sat_list(df.value)
+        self.nsat = df.value.count(1)
+    
+    def get_sat_list(self, ba: bitarray):
+        sat_list = []
+        sat = 1
+        for b in ba:
+            if b == 1:
+                sat_list.append(sat)
+            sat += 1   
 
 class DF395(DataField):
     length = 32

@@ -97,16 +97,18 @@ class RTCMMsm5(RTCMBody):
         
         self.nsat = self.body_data[-2].nsat
         self.nsig = self.body_data[-1].nsig
+        self.sat_data = []
+        self.sig_data = []
 
         cellmask_length = self.nsat * self.nsig
 
         self.body_data.append(DF396(self._get_n_bits(cellmask_length)))
 
-        self.body_data.append(SatDataMSM5(self._ba, self.nsat, self.current_bit))
-        self.current_bit = self.body_data[-1].current_bit
+        self.sat_data.append(SatDataMSM5(self._ba, self.nsat, self.current_bit))
+        self.current_bit = self.sat_data[-1].current_bit
 
-        self.body_data.append(SignalDataMSM5(self._ba, self.nsig, self.current_bit))
-        self.current_bit = self.body_data[-1].current_bit
+        self.sig_data.append(SignalDataMSM5(self._ba, self.nsig, self.current_bit))
+        self.current_bit = self.sig_data[-1].current_bit
 
 class SatData:
 
