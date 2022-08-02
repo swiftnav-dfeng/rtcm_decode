@@ -1,7 +1,7 @@
 from crc import CrcCalculator, Configuration
 import logging
 
-from rtcm import RTCMMsg, CRCQ24
+from rtcm_decode.rtcm import RTCMMsg, CRCQ24
 
 class Handler():
     def __init__(self, handle, callback):
@@ -46,7 +46,7 @@ class Handler():
                 elif len(self.frame) == 2:
                     # third byte of "header"
                     self.frame.append(b)
-                    self.frame_length = (self.frame[2]) + ((self.frame[1] & 0x03) << 8)
+                    self.frame_length = (self.frame[2]) + (self.frame[1] & 0xc0 << 2)
                     if self.frame_length > 1023:
                         # valid lengths are 0-1023, reset frame
                         logging.warn(f"invalid frame length {self.frame_length}, frame {self.frame}")
@@ -57,7 +57,6 @@ class Handler():
                     self.frame.append(b)
 
                     # frame complete
-                    print(f'frame length {self.frame_length}')
                     msg = RTCMMsg(self.frame, self.crcq24)
                     if msg.checksum_passed() is False:
                         logging.warn(f"CRC check failed on frame {self.frame}")
