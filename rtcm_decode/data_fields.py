@@ -31,13 +31,10 @@ class ExtendedSatInfo(DataField):
 # Reserved
 class DF001(DataField):
     name = "Reserved"
-
+    length = 1
     def __init__(self, bits: bitarray):
         super().__init__(bits)
-        if 'length' in kwargs:
-            self.length = kwargs['length']
-        else:
-            self.length = 1
+
         df = RTCMBit(self.length, bits)
         self.value = df.value
 
@@ -216,7 +213,7 @@ class DF393(DataField):
         super().__init__(bits)
         
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = bool(df.value[0])
 
 class DF394(DataField):
     length = 64
@@ -250,7 +247,6 @@ class DF395(DataField):
         self.nsig = self.value.count(1)
 
     def get_sig_list(self, ba: bitarray):
-        print(f'sig list {ba}')
         sig_list = []
         sig = 1
         for b in ba:
@@ -268,7 +264,17 @@ class DF396(DataField):
         # length will be nsat * nsig
         self.length = len(bits)
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = self.get_cell_list(df.value)
+        self.ncell = self.value.count(1)
+
+    def get_cell_list(self, ba: bitarray):
+        cell_list = []
+        cell = 1
+        for b in ba:
+            if b == 1:
+                cell_list.append(cell)
+            cell += 1
+        return cell_list
 
 class DF397(DataField):
     length = 8
@@ -433,7 +439,7 @@ class DF417(DataField):
         super().__init__(bits)
         
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = bool(df.value[0])
 
 class DF418(DataField):
     length = 3
