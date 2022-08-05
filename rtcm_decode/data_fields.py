@@ -1,6 +1,9 @@
 from bitarray import bitarray
 from rtcm_decode.data_types import *
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class DataField:
     length = None

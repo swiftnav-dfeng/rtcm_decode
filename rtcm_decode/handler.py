@@ -3,6 +3,8 @@ import logging
 
 from rtcm_decode.rtcm import RTCMMsg, CRCQ24
 
+logger = logging.getLogger(__name__)
+
 class Handler():
     def __init__(self, handle, callback):
         self.handle = handle

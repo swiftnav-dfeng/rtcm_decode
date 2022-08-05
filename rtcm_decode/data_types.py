@@ -1,5 +1,8 @@
 from bitarray import bitarray
 from bitarray.util import ba2int
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RTCMDataType:
     def __init__(self, length:int, data:bitarray) -> None:

@@ -4,6 +4,8 @@ from rtcm_decode.data_fields import *
 from crc import CrcCalculator, Configuration
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class CRCQ24:
     def __init__(self):
