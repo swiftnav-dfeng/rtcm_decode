@@ -36,7 +36,15 @@ sample_msg = bytearray([
 ])
 
 def process_frame(msg: RTCMMsg):
-    print(msg)
+    print(f'{msg.msg_type} {msg.checksum_passed()}')
+    if msg.checksum_passed() is True:
+        if (msg.msg_type in [1075, 1085, 1095, 1105, 1115, 1125, 1135]):
+            for df in msg.body_obj.body_data:
+                print(f'{df.value} {df.name} {df.unit}')
+            print(f'nsat {msg.body_obj.body_data} nsig {msg.body_obj.nsig}')
+    else:
+        print(msg.msg)
+    pass
 
 def main():
     with open('/Users/dfeng/dev/rtcm_decode/data/d1_30s.rtcm', 'rb') as f:
