@@ -1,6 +1,6 @@
 from rtcm_decode.handler import Handler
 from crc import Configuration
-from rtcm_decode.rtcm import CRCQ24, RTCM1005, RTCMMsg, rtcm_lookup
+from rtcm_decode.rtcm import CRCQ24, RTCM1005, RTCMFrame, rtcm_lookup
 
 crc_configuration = Configuration(width=24, polynomial=0x1864CFB)
 
@@ -35,13 +35,13 @@ sample_msg = bytearray([
     0x98
 ])
 
-def process_frame(msg: RTCMMsg):
+def process_frame(msg: RTCMFrame):
     print(f'{msg.msg_type} {msg.checksum_passed()}')
     if msg.checksum_passed() is True:
         if (msg.msg_type in [1075, 1085, 1095, 1105, 1115, 1125, 1135]):
-            for df in msg.body_obj.body_data:
+            for df in msg.msg.data_fields:
                 print(f'{df.value} {df.name} {df.unit}')
-            print(f'nsat {msg.body_obj.body_data} nsig {msg.body_obj.nsig}')
+            print(msg.msg.get_msg_dict())
     else:
         print(msg.msg)
     pass
@@ -52,10 +52,12 @@ def main():
         h.process()
 
     crcq24 = CRCQ24()
-    r = RTCMMsg(sample_msg, crcq24)
+    r = RTCMFrame(sample_msg, crcq24)
     print(r.checksum_passed())
-    for field in r.body_obj.body_data:
+    for field in r.msg.data_fields:
         print(f'{field.name} {field.value} {field.unit}')
+
+    print(r.msg.get_msg_dict())
 
 if __name__ == "__main__":
     main()

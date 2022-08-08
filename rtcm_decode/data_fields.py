@@ -31,17 +31,18 @@ class ExtendedSatInfo(DataField):
         df = RTCMUint(self.length, bits)
         self.value = df.value
 
-# Reserved
+
 class DF001(DataField):
     name = "Reserved"
     length = 1
-    def __init__(self, bits: bitarray):
+    def __init__(self, bits: bitarray, length = 1):
         super().__init__(bits)
+        self.length = length
 
         df = RTCMBit(self.length, bits)
         self.value = df.value
 
-# Message Number
+
 class DF002(DataField):
     length = 12
     name = "Message Number"
@@ -83,7 +84,7 @@ class DF021(DataField):
         df = RTCMUint(self.length, bits)
         self.value = df.value
 
-# GPS Indicator
+
 class DF022(DataField):
     length = 1
     name = "GPS Indicator"
@@ -92,7 +93,7 @@ class DF022(DataField):
         super().__init__(bits)
 
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = bool(df.value[0])
 
 # GLONASS Indicator
 class DF023(DataField):
@@ -103,7 +104,7 @@ class DF023(DataField):
         super().__init__(bits)
 
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = bool(df.value[0])
 
 # Reserved for Galileo Indicator
 class DF024(DataField):
@@ -114,7 +115,7 @@ class DF024(DataField):
         super().__init__(bits)
 
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = bool(df.value[0])
 
 # Antenna reference point ECEF-X
 class DF025(DataField):
@@ -173,7 +174,7 @@ class DF141(DataField):
         super().__init__(bits)
 
         df = RTCMBit(self.length, bits)
-        self.value = df.value
+        self.value = bool(df.value[0])
 
 # Single Receiver Oscillator Indicator
 class DF142(DataField):
@@ -267,17 +268,9 @@ class DF396(DataField):
         # length will be nsat * nsig
         self.length = len(bits)
         df = RTCMBit(self.length, bits)
-        self.value = self.get_cell_list(df.value)
+        self.value = df.value
         self.ncell = self.value.count(1)
 
-    def get_cell_list(self, ba: bitarray):
-        cell_list = []
-        cell = 1
-        for b in ba:
-            if b == 1:
-                cell_list.append(cell)
-            cell += 1
-        return cell_list
 
 class DF397(DataField):
     length = 8

@@ -1,7 +1,7 @@
 from crc import CrcCalculator, Configuration
 import logging
 
-from rtcm_decode.rtcm import RTCMMsg, CRCQ24
+from rtcm_decode.rtcm import RTCMFrame, CRCQ24
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class Handler():
                     self.frame.append(b)
 
                     # frame complete
-                    msg = RTCMMsg(self.frame, self.crcq24)
+                    msg = RTCMFrame(self.frame, self.crcq24)
                     if msg.checksum_passed() is False:
                         logging.warn(f"CRC check failed on frame {self.frame}")
                         # crc failed, reset frame

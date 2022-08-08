@@ -16,111 +16,153 @@ class CRCQ24:
         checksum = self.crc_calculator.calculate_checksum(msg)
         return checksum
 
-
-class RTCMMsg:
+# RTCM transport frame as defined in RTCM 10403.3, section 4
+class RTCMFrame:
     dfs = []
 
-    def __init__(self, msg:bytearray, crcq24: CRCQ24 = None):
-        self.msg = msg
-        self._ba = bitarray(buffer = msg, endian='big')
+    def __init__(self, frame:bytearray, crcq24: CRCQ24 = None):
+        self.frame = frame
+        self._ba = bitarray(buffer = frame, endian='big')
 
         self.current_bit = 0
-        # header info
-        self.preamble = ba2int(self._get_n_bits(8))
-        self.reserved1 = ba2int(self._get_n_bits(6))
-        self.length = self._get_n_bits(10)
-        self.msg_type = ba2int(self._get_n_bits(12))
+        # transport info, RTCM 10403.3, section 4.1
+        self.preamble = ba2int(self._ba[0:8])
+        self.reserved1 = ba2int(self._ba[8:14])
+        self.length = ba2int(self._ba[14:24])
+        self.msg_type = None
+        if self.length > 0:
+            self.msg_type = ba2int(self._ba[24:36])
 
-        self.body_obj = None
+        self.msg = None
 
-        self.crc = self.get_crc()
+        self.crc = ba2int(self._ba[-24:])
 
         # check crc
         if crcq24 is None:
             crcq24 = CRCQ24()
 
-        self.checksum = crcq24.calculate_checksum(msg[:-3])
+        self.checksum = crcq24.calculate_checksum(frame[:-3])
+        
         if self.checksum_passed():
-            body_cls = rtcm_lookup.get(self.msg_type, None)
-            if body_cls is not None:
-                self.body_obj = body_cls(self._ba[self.current_bit:])
+            # empty messages allowed for keep alive
+            if self.length > 0:
+                body_cls = rtcm_lookup.get(self.msg_type, None)
+                if body_cls is not None:
+                    self.msg = body_cls(self._ba[24:-24])
         else:
             logging.warn(f'checksum failed header crc = {self.crc}, calculated = {self.checksum}')
 
-    def get_crc(self):
-        return ba2int(self._ba[-24:])
     
     def checksum_passed(self):
         return self.checksum == self.crc
 
-    def _get_n_bits(self, n):
-        val = self._ba[self.current_bit:self.current_bit+n]
-        self.current_bit += n
-        return val
+    # def _get_n_bits(self, n):
+    #     val = self._ba[self.current_bit:self.current_bit+n]
+    #     self.current_bit += n
+    #     return val
     
-            
-class RTCMBody:
-    def __init__(self, body: bitarray) -> None:
-        self._ba = body
-        self.current_bit = 0
-        self.body_data = []
-        pass
+# RTCM message (presentation layer) as defined in RTCM 10403.3, section 3
+class RTCMMsg:
+
+    df_types = []
+
+    def __init__(self, msg: bitarray) -> None:
+        self.msg = msg
+
+        self._current_bit = 0
+        
+        self.data_fields = []
+
 
     def _get_n_bits(self, n):
-        val = self._ba[self.current_bit:self.current_bit+n]
-        self.current_bit += n
+        val = self.msg[self._current_bit:self._current_bit+n]
+        self._current_bit += n
         return val
 
-    def _get_body_data(self):
-        for df in self.dfs:
-            self.body_data.append(df(self._get_n_bits(df.length)))
+    def _get_data_fields(self):
+        for df_type, length in self.df_types:
+            if length == None:
+                self.data_fields.append(df_type(self._get_n_bits(df_type.length)))
+            else:
+                self.data_fields.append(df_type(self._get_n_bits(length), length=length))
 
-class RTCMMsm(RTCMBody):
+    def get_msg_dict(self):
+        msg_dict = {}
+
+        for cls in self.data_fields:
+            msg_dict[cls.name] = (cls.value, cls.unit)
+
+        return msg_dict
+
+
+
+
+class RTCM1005(RTCMMsg):
+
+    df_types = [
+        (DF002, None), 
+        (DF003, None), 
+        (DF021, None), 
+        (DF022, None), 
+        (DF023, None), 
+        (DF024, None), 
+        (DF141, None), 
+        (DF025, None), 
+        (DF142, None), 
+        (DF001, None), 
+        (DF026, None), 
+        (DF364, None), 
+        (DF027, None)
+    ]
+
+
+    def __init__(self, msg: bitarray) -> None:
+        super().__init__(msg)
+
+        self._get_data_fields()
+
+
+class RTCMMsm(RTCMMsg):
     # header
-    dfs = [
-        DF003,
-        GNSSEpochTime,
-        DF393,
-        DF409,
-        DF001,
-        DF001,
-        DF001,
-        DF001,
-        DF001,
-        DF001,
-        DF001,
-        DF411,
-        DF412,
-        DF417,
-        DF418,
-        DF394,
-        DF395
+    df_types = [
+        (DF002, None),
+        (DF003, None),
+        (GNSSEpochTime, None),
+        (DF393, None),
+        (DF409, None),
+        (DF001, 7),
+        (DF411, None),
+        (DF412, None),
+        (DF417, None),
+        (DF418, None),
+        (DF394, None),
+        (DF395, None)
         # cell mask last (DF396)
     ]
 
     def __init__(self, body: bitarray) -> None:
         super().__init__(body)
 
-        self._get_body_data()
+        self._get_data_fields()
         
-        self.nsat = self.body_data[-2].nsat
-        self.nsig = self.body_data[-1].nsig
+        self.nsat = self.data_fields[-2].nsat
+        self.nsig = self.data_fields[-1].nsig
         self.sat_data = []
         self.sig_data = []
 
         cellmask_length = self.nsat * self.nsig
 
-        self.body_data.append(DF396(self._get_n_bits(cellmask_length)))
+        self.data_fields.append(DF396(self._get_n_bits(cellmask_length)))
+
 
 class RTCMMsm5(RTCMMsm):
     def __init__(self, body: bitarray) -> None:
         super().__init__(body)
         
-        self.sat_data.append(SatDataMSM5(self._ba, self.nsat, self.current_bit))
-        self.current_bit = self.sat_data[-1].current_bit
+        self.sat_data = SatDataMSM5(self.msg, self.nsat, self._current_bit)
+        self._current_bit = self.sat_data.current_bit
 
-        self.sig_data.append(SignalDataMSM5(self._ba, self.nsig, self.current_bit))
-        self.current_bit = self.sig_data[-1].current_bit
+        self.sig_data = SignalDataMSM5(self.msg, self.nsig, self._current_bit)
 
 class SatData:
 
@@ -191,16 +233,6 @@ class SignalDataMSM5(SignalData):
 
         self.signal_data = self._collect_sig_data()
 
-class RTCM1005(RTCMBody):
-
-    dfs = [DF003, DF021, DF022, DF023, DF024, DF141, DF025, DF142, DF001, DF026, DF364, DF027]
-
-    def __init__(self, body: bitarray) -> None:
-        super().__init__(body)
-
-        self._get_body_data()
-
-        
 
 rtcm_lookup = {
     1005: RTCM1005,
