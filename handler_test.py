@@ -35,15 +35,16 @@ sample_msg = bytearray([
     0x98
 ])
 
-def process_frame(msg: RTCMFrame):
-    print(f'{msg.msg_type} {msg.checksum_passed()}')
-    if msg.checksum_passed() is True:
-        if (msg.msg_type in [1075, 1085, 1095, 1105, 1115, 1125, 1135]):
-            for df in msg.msg.data_fields:
+def process_frame(frame: RTCMFrame):
+    print(f'{frame.msg_type} {frame.checksum_passed()}')
+    if frame.checksum_passed() is True:
+        if (frame.msg_type in [1075, 1085, 1095, 1105, 1115, 1125, 1135]):
+            for df in frame.msg.data_fields:
                 print(f'{df.value} {df.name} {df.unit}')
-            print(msg.msg.get_msg_dict())
+            print(frame.msg.get_msg_dict())
+            print(frame.msg.observations)
     else:
-        print(msg.msg)
+        print(frame.msg)
     pass
 
 def main():
