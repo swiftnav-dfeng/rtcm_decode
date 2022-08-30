@@ -48,6 +48,7 @@ def process_frame(frame: RTCMFrame):
     pass
 
 def main():
+    h = None
     with open('/Users/dfeng/dev/rtcm_decode/data/d1_30s.rtcm', 'rb') as f:
         h = Handler(f, process_frame)
         h.process()
@@ -59,6 +60,12 @@ def main():
         print(f'{field.name} {field.value} {field.unit}')
 
     print(r.msg.get_msg_dict())
+
+    print(f'{h.extra_bytes} extra bytes in stream')
+    print(f'{h.used_bytes} used bytes in stream')
+    print(f'{h.bytes_read} bytes read in stream')
+    print(f'{h.good_frames} good frames')
+    print(f'{h.bad_frames} bad frames')
 
 if __name__ == "__main__":
     main()

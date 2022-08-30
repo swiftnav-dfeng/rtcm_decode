@@ -17,19 +17,27 @@ class Handler():
 
         self.callback = callback
 
+        self.extra_bytes = 0
+        self.used_bytes = 0
+        self.bytes_read = 0
+        self.good_frames = 0
+        self.bad_frames = 0
+
 
     def process(self):
         while True:
             buf = bytearray(b'')
             if self.handle is not None:
                 buf = bytearray(self.handle.read(1024))
-            
+            self.bytes_read += len(buf)
             self.insert_data(buf)
             if len(self.data) == 0:
+                logging.warning('no data available, returning')
+                self.extra_bytes += len(self.frame)
                 break
             self.framer()
         
-        logging.info('no data available, returning')
+        
 
     def insert_data(self, data:bytearray):
         self.data += data
@@ -42,6 +50,9 @@ class Handler():
                     # 1st byte, preamble
                     if b == 0xd3:
                         self.frame.append(b)
+                    else:
+                        # unnecessary byte
+                        self.extra_bytes += 1
                 elif len(self.frame) == 1:
                     # 2nd byte, first 6 bits reserved, standard says to ignore
                     self.frame.append(b)
@@ -53,6 +64,8 @@ class Handler():
                         # valid lengths are 0-1023, reset frame
                         logging.warn(f"invalid frame length {self.frame_length}, frame {self.frame}")
                         self.data = self.frame[1:] + self.data
+                        # one byte (preamble) thrown away
+                        self.extra_bytes += 1
                         self.reset_frame()
                 elif (self.frame_length is not None) and (len(self.frame) == self.frame_length + 5):
                     # frame_length does not include header (3 bytes) and crc (3 bytes)
@@ -62,9 +75,16 @@ class Handler():
                     msg = RTCMFrame(self.frame, self.crcq24)
                     if msg.checksum_passed() is False:
                         logging.warn(f"CRC check failed on frame {self.frame}")
-                        # crc failed, reset frame
+                        # crc failed
                         # reinsert all bytes, except the preamble back into data
                         self.data = self.frame[1:] + self.data
+
+                        # one byte (preamble) thrown away
+                        self.extra_bytes += 1
+                        self.bad_frames += 1
+                    else:
+                        self.used_bytes += len(self.frame)
+                        self.good_frames += 1
                     self.callback(msg)      
                     self.reset_frame()
                 else:
