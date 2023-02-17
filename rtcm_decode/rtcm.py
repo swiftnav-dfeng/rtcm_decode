@@ -1,7 +1,7 @@
 from bitarray import bitarray
 from bitarray.util import ba2int
 from rtcm_decode.data_fields import *
-from crc import CrcCalculator, Configuration
+from crc import Calculator, Configuration
 import logging
 from copy import deepcopy
 
@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 class CRCQ24:
     def __init__(self):
         self.crc_configuration = Configuration(width=24, polynomial=0x1864CFB)
-        self.crc_calculator = CrcCalculator(self.crc_configuration, True)
+        self.crc_calculator = Calculator(self.crc_configuration, True)
 
     def calculate_checksum(self, msg):
-        checksum = self.crc_calculator.calculate_checksum(msg)
+        checksum = self.crc_calculator.checksum(msg)
         return checksum
 
 # RTCM transport frame as defined in RTCM 10403.3, section 4

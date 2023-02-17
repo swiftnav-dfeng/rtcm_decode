@@ -1,4 +1,4 @@
-from crc import CrcCalculator, Configuration
+from crc import Calculator, Configuration
 import logging
 
 from rtcm_decode.rtcm import RTCMFrame, CRCQ24
@@ -81,9 +81,9 @@ class Handler():
 
     def check_frame(config, crc, data):
         # perform crc check
-        crc_calculator = CrcCalculator(config, True)
+        crc_calculator = Calculator(config, True)
 
-        checksum = crc_calculator.calculate_checksum(data)
+        checksum = crc_calculator.checksum(data)
         if checksum == crc:
             return True
         else:
